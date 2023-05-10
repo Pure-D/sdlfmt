@@ -224,7 +224,7 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			multiLineIndent = 0;
 			break;
 		case TokenType.blockClose:
-			if (ret.data.length && !(ret.data[$ - 1] == '\n' || ret.data[$ - 1] == 'r'))
+			if (ret.data.length && !(ret.data[$ - 1] == '\n' || ret.data[$ - 1] == '\r'))
 				ret ~= config.lineEnding;
 			indent--;
 			multiLineIndent = 0;
