@@ -35,26 +35,31 @@ SdlFmtConfig deserializeConfig(string name)
 		{
 			name = name["tabs-".length .. $];
 			auto count = name.parse!int;
-			enforce(name.startsWith("-"), "invalid format, expected `tabs-N`, where N is an integer");
+			enforce(name.startsWith("-") || !name.length, "invalid format, expected `tabs-N`, where N is an integer");
 			ret.indent = '\t'.repeat(count).array;
 		}
 		else if (name.startsWith("spaces-"))
 		{
 			name = name["spaces-".length .. $];
 			auto count = name.parse!int;
-			enforce(name.startsWith("-"), "invalid format, expected `spaces-N`, where N is an integer");
+			enforce(name.startsWith("-") || !name.length, "invalid format, expected `spaces-N`, where N is an integer");
 			ret.indent = ' '.repeat(count).array;
 		}
 		else if (name.startsWith("tempws-"))
 		{
 			name = name["tempws-".length .. $];
 			ret.backslashTempIndent = name.parse!int;
-			enforce(name.startsWith("-"), "invalid format, expected `tempws-N`, where N is an integer");
+			enforce(name.startsWith("-") || !name.length, "invalid format, expected `tempws-N`, where N is an integer");
 		}
 		else if (name.startsWith("equals_ws"))
 		{
 			name = name["equals_ws".length .. $];
 			ret.whitespaceAroundEquals = true;
+		}
+		else if (name.startsWith("crlf"))
+		{
+			name = name["crlf".length .. $];
+			ret.lineEnding = "\r\n";
 		}
 		else if (name.startsWith("lf"))
 		{
@@ -66,11 +71,6 @@ SdlFmtConfig deserializeConfig(string name)
 			name = name["cr".length .. $];
 			ret.lineEnding = "\r";
 		}
-		else if (name.startsWith("crlf"))
-		{
-			name = name["crlf".length .. $];
-			ret.lineEnding = "\r\n";
-		}
 		else
 			throw new Exception("Unknown format part, known parts: tabs-N, spaces-N, tempws-N, equals_ws, lf, cr, crlf");
 	}
@@ -80,10 +80,10 @@ SdlFmtConfig deserializeConfig(string name)
 
 int main(string[] args)
 {
+	import std.file : write;
+
 	if (args.length > 1 && args[1] == "generate")
 	{
-		import std.file : write;
-
 		enforce(args.length > 2, "Usage: " ~ args[0] ~ " generate [file] ([options])\nwhere options is the serialized options name (folder name in results)");
 		auto serializedOptions = args.length > 3 ? args[3] : "default";
 		auto options = deserializeConfig(serializedOptions);
@@ -116,10 +116,12 @@ int main(string[] args)
 		auto sourceName = buildPath("source", baseName(parts));
 		missingSourceFiles = missingSourceFiles.remove!(a => a == sourceName);
 
-		auto expected = config.format(sourceName.readText, sourceName);
-		auto actual = readText(test);
+		auto actual = config.format(sourceName.readText, sourceName);
+		auto expected = readText(test);
 
-		if (expected != actual)
+		write(buildPath("actual", dirName(parts) ~ "-" ~ baseName(parts)), actual);
+
+		if (actual != expected)
 		{
 			writeln("\x1B[1;31mFAIL\x1B[m");
 			fails++;

@@ -15,3 +15,4 @@ sdlfmt-test-*
 *.obj
 *.lst
 test/checkfmt
+test/actual

@@ -122,7 +122,7 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 
 	bool isComment(scope const(char)[] sdl)
 	{
-		if (sdl.startsWith("//", "--"))
+		if (sdl.startsWith("//", "--", "#"))
 			return true;
 		else if (sdl.startsWith("/*"))
 			return sdl.endsWith("*/") && !sdl[0 .. $ - 2].canFind("*/");
@@ -167,6 +167,27 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 		neededNewLines ~= lastNewLineIndex;
 	}
 
+	void appendFixedNewlines(T)(T text)
+	{
+		import std.uni : lineSep, paraSep;
+
+		foreach (line; text.lineSplitter!(KeepTerminator.yes))
+		{
+			if (line.endsWith("\r\n"))
+			{
+				ret ~= line[0 .. $ - 2];
+				ret ~= config.lineEnding;
+			}
+			else if (line.endsWith('\r', '\n', '\v', '\f', '\x85'))
+			{
+				ret ~= line[0 .. $ - 1];
+				ret ~= config.lineEnding;
+			}
+			else
+				ret ~= line;
+		}
+	}
+
 	foreach (token; lexSDLang(sdl, filename))
 	{
 		final switch (token.type)
@@ -182,8 +203,8 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			}
 			else
 			{
-				ret ~= token.whitespacePrefix;
-				ret ~= token.text;
+				appendFixedNewlines(token.whitespacePrefix);
+				appendFixedNewlines(token.text);
 			}
 			break;
 		case TokenType.eof: break;
@@ -199,7 +220,7 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			break;
 		case TokenType.semicolon:
 			putIndentIfNeeded();
-			ret ~= token.text;
+			ret ~= ";";
 			multiLineIndent = 0;
 			break;
 		case TokenType.blockClose:
@@ -220,7 +241,7 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			else
 				putIndentIfNeeded();
 
-			ret ~= token.text;
+			ret ~= "{";
 			queueNewLine = true;
 			break;
 		case TokenType.namespace:
@@ -243,8 +264,8 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			else
 				putIndentIfNeeded();
 
-			ret ~= token.text;
-			if (token.text.endsWith("\n", "\r"))
+			appendFixedNewlines(token.text);
+			if (ret.data.endsWith(config.lineEnding))
 				lastNewLineIndex = ret.data.length;
 			break;
 		case TokenType.null_:
@@ -261,10 +282,13 @@ string format(SdlFmtConfig config, scope const(char)[] sdl, string filename = ""
 			else
 				putIndentIfNeeded();
 
-			ret ~= token.text;
+			appendFixedNewlines(token.text);
 			break;
 		}
 	}
+
+	if (ret.data.length && !ret.data.endsWith(config.lineEnding))
+		ret ~= config.lineEnding;
 
 	auto data = ret.data;
 	if (!neededNewLines.length)
