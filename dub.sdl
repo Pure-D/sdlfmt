@@ -1,5 +1,6 @@
 name "sdlfmt"
-description "A minimal D application."
+description "Auto-formatter for SDLang files, based on sdlite"
 authors "webfreak"
+copyright "Copyright © 2023, webfreak"
 license "MIT"
 dependency "sdlite" version="~>1.1.2"
