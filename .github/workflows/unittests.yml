@@ -1,0 +1,33 @@
+name: Run Unittests
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+  dubtest:
+    name: Dub Tests
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu / linux must run on kinda old linux for glibc compatibility!
+        os: [ubuntu-20.04]
+        dc: [dmd-latest, ldc-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        timeout-minutes: 5
+        with:
+          compiler: ${{ matrix.dc }}
+
+      - name: Run unittests
+        run: dub test
+        timeout-minutes: 5
+
+      - name: Run format tests
+        run: cd test && dub --single checkfmt.d
+        timeout-minutes: 5

@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/sdlfmt
+libsdlfmt.so
+libsdlfmt.dylib
+sdlfmt.dll
+libsdlfmt.a
+sdlfmt.lib
+sdlfmt-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
+test/checkfmt
