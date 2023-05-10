@@ -9,6 +9,8 @@ sdlfmt.dll
 libsdlfmt.a
 sdlfmt.lib
 sdlfmt-test-*
+sdlfmt.tar.xz
+sdlfmt.zip
 *.exe
 *.pdb
 *.o
